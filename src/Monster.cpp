@@ -32,20 +32,12 @@ const std::vector<Item>& Monster::items() const {
     return items_;
 }
 
-const std::vector<StatusEffect>& Monster::statuses() const {
-    return statuses_;
-}
-
 bool Monster::isDefeated() const {
     return hitPoints_ <= 0;
 }
 
 void Monster::takeDamage(int damage) {
     hitPoints_ = std::max(0, hitPoints_ - std::max(0, damage));
-}
-
-void Monster::heal(int amount) {
-    hitPoints_ = std::min(maxHitPoints_, hitPoints_ + std::max(0, amount));
 }
 
 void Monster::healToFull() {
@@ -58,12 +50,6 @@ void Monster::addItem(const Item& item) {
 
 void Monster::addStatus(const StatusEffect& status) {
     statuses_.push_back(status);
-}
-
-bool Monster::hasAnyStatus() const {
-    return std::any_of(statuses_.begin(), statuses_.end(), [](const StatusEffect& status) {
-        return !status.isExpired();
-    });
 }
 
 bool Monster::applyStartOfTurn(std::ostream& output, std::mt19937& randomEngine) {

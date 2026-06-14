@@ -14,24 +14,21 @@ Item::Item(std::string name, int damage)
       statusChancePercent_(0),
       statusType_(StatusType::Poisoned),
       statusDuration_(0),
-      statusTarget_(ItemTarget::Opponent),
-      chanceRule_(ItemChanceRule::Fixed) {}
+      statusTarget_(ItemTarget::Opponent) {}
 
 Item::Item(std::string name,
            int damage,
            int statusChancePercent,
            StatusType statusType,
            int statusDuration,
-           ItemTarget statusTarget,
-           ItemChanceRule chanceRule)
+           ItemTarget statusTarget)
     : name_(std::move(name)),
       damage_(std::max(0, damage)),
       appliesStatus_(true),
       statusChancePercent_(std::clamp(statusChancePercent, 0, 100)),
       statusType_(statusType),
       statusDuration_(std::max(1, statusDuration)),
-      statusTarget_(statusTarget),
-      chanceRule_(chanceRule) {}
+      statusTarget_(statusTarget) {}
 
 const std::string& Item::name() const {
     return name_;
@@ -73,10 +70,9 @@ void Item::use(
     }
 
     Monster& statusTarget = statusTarget_ == ItemTarget::Self ? user : opponent;
-    const int chance = effectiveStatusChance(statusTarget);
     std::uniform_int_distribution<int> roll(1, 100);
 
-    if (roll(randomEngine) <= chance) {
+    if (roll(randomEngine) <= statusChancePercent_) {
         statusTarget.addStatus(StatusEffect(statusType_, statusDuration_));
         output << statusTarget.name() << " fik status " << StatusEffect(statusType_, 1).name()
                << ".\n";
@@ -106,37 +102,9 @@ Item Item::blaster() {
 }
 
 Item Item::curse() {
-    return Item("Forbandelse",
-                0,
-                20,
-                StatusType::Cursed,
-                3,
-                ItemTarget::Opponent,
-                ItemChanceRule::TargetHasStatus);
+    return Item("Forbandelse", 0, 20, StatusType::Cursed, 3, ItemTarget::Opponent);
 }
 
 Item Item::poison() {
-    return Item("Gift",
-                0,
-                20,
-                StatusType::Poisoned,
-                3,
-                ItemTarget::Opponent,
-                ItemChanceRule::TargetDamaged);
-}
-
-Item Item::focusStone() {
-    return Item("Fokussten", 0, 100, StatusType::Focused, 2, ItemTarget::Self);
-}
-
-int Item::effectiveStatusChance(const Monster& target) const {
-    if (chanceRule_ == ItemChanceRule::TargetHasStatus && target.hasAnyStatus()) {
-        return 100;
-    }
-
-    if (chanceRule_ == ItemChanceRule::TargetDamaged && target.hitPoints() < target.maxHitPoints()) {
-        return 100;
-    }
-
-    return statusChancePercent_;
+    return Item("Gift", 0, 20, StatusType::Poisoned, 3, ItemTarget::Opponent);
 }

@@ -18,8 +18,6 @@ std::string statusName(StatusType type) {
         return "Stunned";
     case StatusType::Cursed:
         return "Cursed";
-    case StatusType::Focused:
-        return "Focused";
     }
 
     return "Unknown";
@@ -74,10 +72,6 @@ bool StatusEffect::applyStartOfTurn(
         break;
     case StatusType::Cursed:
         output << monster.name() << " er Cursed.\n";
-        break;
-    case StatusType::Focused:
-        monster.heal(2);
-        output << monster.name() << " er Focused og heler 2 hp.\n";
         break;
     }
 

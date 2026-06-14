@@ -12,8 +12,7 @@ enum class StatusType {
     Frozen,
     Paralyzed,
     Stunned,
-    Cursed,
-    Focused
+    Cursed
 };
 
 class StatusEffect {

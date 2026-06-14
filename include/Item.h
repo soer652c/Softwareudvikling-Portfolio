@@ -14,12 +14,6 @@ enum class ItemTarget {
     Opponent
 };
 
-enum class ItemChanceRule {
-    Fixed,
-    TargetHasStatus,
-    TargetDamaged
-};
-
 class Item {
 public:
     Item(std::string name, int damage);
@@ -28,8 +22,7 @@ public:
          int statusChancePercent,
          StatusType statusType,
          int statusDuration,
-         ItemTarget statusTarget,
-         ItemChanceRule chanceRule = ItemChanceRule::Fixed);
+         ItemTarget statusTarget);
 
     const std::string& name() const;
     bool dealsDamage() const;
@@ -44,11 +37,8 @@ public:
     static Item blaster();
     static Item curse();
     static Item poison();
-    static Item focusStone();
 
 private:
-    int effectiveStatusChance(const Monster& target) const;
-
     std::string name_;
     int damage_;
     bool appliesStatus_;
@@ -56,7 +46,6 @@ private:
     StatusType statusType_;
     int statusDuration_;
     ItemTarget statusTarget_;
-    ItemChanceRule chanceRule_;
 };
 
 #endif

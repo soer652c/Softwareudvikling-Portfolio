@@ -4,27 +4,15 @@
 #include "MonsterCatalog.h"
 
 #include <algorithm>
-#include <numeric>
 #include <sstream>
 #include <utility>
 
 namespace {
-int monsterScore(const Monster& monster) {
-    return monster.maxHitPoints() + monster.strength() * 3;
-}
-
-int characterLevelScore(const Character& character) {
-    const auto& monsters = character.monsters();
-
-    if (monsters.empty()) {
-        return 5;
-    }
-
-    const int total = std::accumulate(monsters.begin(), monsters.end(), 0, [](int sum, const Monster& monster) {
-        return sum + monsterScore(monster);
-    });
-
-    return std::max(5, total / static_cast<int>(monsters.size()));
+std::size_t highestAllowedMonsterIndex(
+    const Character& character, const MonsterCatalog& catalog, int caveNumber) {
+    const std::size_t playerMonsterCount = character.monsters().size();
+    const std::size_t wantedIndex = playerMonsterCount + static_cast<std::size_t>(caveNumber);
+    return std::min(wantedIndex, catalog.monsters().size() - 1);
 }
 }
 
@@ -72,25 +60,14 @@ Cave Cave::generateForCharacter(
     const MonsterCatalog& catalog,
     int caveNumber,
     std::mt19937& randomEngine) {
-    const int playerScore = characterLevelScore(character);
-    std::vector<Monster> candidates;
-
-    for (const Monster& monster : catalog.monsters()) {
-        if (monsterScore(monster) <= playerScore + caveNumber * 8) {
-            candidates.push_back(monster);
-        }
-    }
-
-    if (candidates.empty()) {
-        candidates.push_back(catalog.starterHorse());
-    }
-
-    std::uniform_int_distribution<std::size_t> monsterRoll(0, candidates.size() - 1);
+    const auto& catalogMonsters = catalog.monsters();
+    const std::size_t highestIndex = highestAllowedMonsterIndex(character, catalog, caveNumber);
+    std::uniform_int_distribution<std::size_t> monsterRoll(0, highestIndex);
     const int monsterCount = std::clamp(2 + caveNumber, 2, 5);
     std::vector<Monster> monsters;
 
     for (int index = 0; index < monsterCount; ++index) {
-        monsters.push_back(candidates[monsterRoll(randomEngine)]);
+        monsters.push_back(catalogMonsters[monsterRoll(randomEngine)]);
     }
 
     return Cave("Grotte " + std::to_string(caveNumber), monsters);

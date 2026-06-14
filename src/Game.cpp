@@ -255,7 +255,6 @@ Item Game::randomRewardItem() {
         Item::blaster(),
         Item::curse(),
         Item::poison(),
-        Item::focusStone(),
     };
 
     std::uniform_int_distribution<std::size_t> roll(0, rewards.size() - 1);
