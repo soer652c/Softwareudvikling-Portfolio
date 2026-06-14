@@ -10,6 +10,7 @@
 Game::Game(std::istream& input, std::ostream& output)
     : output_(output),
       input_(input, output),
+      database_("monster_adventure.db"),
       randomEngine_(static_cast<std::mt19937::result_type>(
           std::chrono::steady_clock::now().time_since_epoch().count())) {}
 
@@ -17,23 +18,33 @@ void Game::run() {
     bool running = true;
 
     output_ << "Monster Adventure\n";
+    showSavedHeroes();
 
     while (running) {
         showMainMenu();
-        const int choice = input_.readIntInRange("Vaelg: ", 1, 4);
+        const int choice = input_.readIntInRange("Vaelg: ", 1, 7);
 
         switch (choice) {
         case 1:
             createNewCharacter();
             break;
         case 2:
-            startAdventure();
+            loadCharacterFromDatabase();
             break;
         case 3:
+            saveCharacterToDatabase();
+            break;
+        case 4:
+            startAdventure();
+            break;
+        case 5:
             listCharacterMonsters();
             input_.waitForEnter();
             break;
-        case 4:
+        case 6:
+            showStatistics();
+            break;
+        case 7:
             running = false;
             output_ << "Farvel.\n";
             break;
@@ -46,9 +57,30 @@ void Game::run() {
 void Game::showMainMenu() {
     output_ << "\nHovedmenu\n"
             << "1. Lav ny karakter\n"
-            << "2. Start eventyr\n"
-            << "3. Vis karakter\n"
-            << "4. Luk spillet\n";
+            << "2. Load gemt helt\n"
+            << "3. Gem nuvaerende helt\n"
+            << "4. Start eventyr\n"
+            << "5. Vis karakter\n"
+            << "6. Vis statistik\n"
+            << "7. Luk spillet\n";
+}
+
+void Game::showSavedHeroes() const {
+    if (!database_.isOpen()) {
+        output_ << "Database kunne ikke aabnes: " << database_.lastError() << "\n";
+        return;
+    }
+
+    const auto heroes = database_.listHeroes();
+    if (heroes.empty()) {
+        output_ << "Ingen gemte helte endnu.\n";
+        return;
+    }
+
+    output_ << "Gemte helte:\n";
+    for (const HeroRecord& hero : heroes) {
+        output_ << "- " << hero.name << "\n";
+    }
 }
 
 void Game::createNewCharacter() {
@@ -61,6 +93,55 @@ void Game::createNewCharacter() {
     character_ = newCharacter;
 
     output_ << character_->name() << " er oprettet med to Hest.\n";
+}
+
+void Game::loadCharacterFromDatabase() {
+    const auto heroes = database_.listHeroes();
+
+    if (heroes.empty()) {
+        output_ << "Der er ingen gemte helte.\n";
+        input_.waitForEnter();
+        return;
+    }
+
+    output_ << "\nVaelg gemt helt\n";
+    for (std::size_t index = 0; index < heroes.size(); ++index) {
+        output_ << index + 1 << ". " << heroes[index].name << "\n";
+    }
+
+    const int choice = input_.readIntInRange("Helt: ", 1, static_cast<int>(heroes.size()));
+    const std::optional<Character> loaded =
+        database_.loadCharacter(heroes[static_cast<std::size_t>(choice - 1)].id);
+
+    if (!loaded) {
+        output_ << "Helten kunne ikke indlaeses.\n";
+    } else {
+        character_ = loaded;
+        output_ << character_->name() << " er indlaest.\n";
+    }
+
+    input_.waitForEnter();
+}
+
+void Game::saveCharacterToDatabase() {
+    if (!character_) {
+        output_ << "Der er ingen aktiv helt at gemme.\n";
+        input_.waitForEnter();
+        return;
+    }
+
+    if (database_.saveCharacter(*character_)) {
+        output_ << character_->name() << " er gemt.\n";
+    } else {
+        output_ << "Kunne ikke gemme helt: " << database_.lastError() << "\n";
+    }
+
+    input_.waitForEnter();
+}
+
+void Game::showStatistics() {
+    database_.printStatistics(output_);
+    input_.waitForEnter();
 }
 
 void Game::startAdventure() {
@@ -104,10 +185,19 @@ bool Game::fightEnemy(Monster& enemy) {
     while (!enemy.isDefeated() && character_->hasLivingMonsters()) {
         const std::size_t playerMonsterIndex = chooseLivingMonsterIndex();
         Monster& playerMonster = character_->monsters().at(playerMonsterIndex);
+        character_->stats().monsterUses[playerMonster.name()]++;
         const BattleResult result = battle.fight(playerMonster, enemy, input_, output_);
+
+        for (const std::string& itemName : result.usedItemNames) {
+            character_->stats().itemUses[itemName]++;
+        }
 
         if (result.playerMonsterWon) {
             enemyDefeated = true;
+            character_->stats().totalDefeatedMonsters++;
+            if (result.defeatingItemName) {
+                character_->stats().itemDefeats[*result.defeatingItemName]++;
+            }
         } else if (character_->hasLivingMonsters()) {
             output_ << "Du har stadig monstre tilbage. Send et nyt ind.\n";
         }

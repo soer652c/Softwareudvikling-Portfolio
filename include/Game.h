@@ -3,6 +3,7 @@
 
 #include "Cave.h"
 #include "Character.h"
+#include "Database.h"
 #include "Input.h"
 #include "Item.h"
 #include "MonsterCatalog.h"
@@ -20,7 +21,11 @@ public:
 
 private:
     void showMainMenu();
+    void showSavedHeroes() const;
     void createNewCharacter();
+    void loadCharacterFromDatabase();
+    void saveCharacterToDatabase();
+    void showStatistics();
     void startAdventure();
     bool fightEnemy(Monster& enemy);
     void startSingleMonsterFight();
@@ -36,6 +41,7 @@ private:
     std::ostream& output_;
     Input input_;
     MonsterCatalog catalog_;
+    Database database_;
     std::optional<Character> character_;
     std::mt19937 randomEngine_;
 };
