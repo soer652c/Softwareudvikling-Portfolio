@@ -5,11 +5,14 @@ project(MonsterAdventure VERSION 0.1.0 LANGUAGES CXX)
 add_executable(monster_adventure
     src/main.cpp
     src/Battle.cpp
+    src/Cave.cpp
     src/Character.cpp
     src/Game.cpp
     src/Input.cpp
+    src/Item.cpp
     src/Monster.cpp
     src/MonsterCatalog.cpp
+    src/StatusEffect.cpp
 )
 
 target_include_directories(monster_adventure PRIVATE include)

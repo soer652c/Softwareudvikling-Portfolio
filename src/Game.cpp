@@ -5,6 +5,7 @@
 #include <chrono>
 #include <iostream>
 #include <string>
+#include <vector>
 
 Game::Game(std::istream& input, std::ostream& output)
     : output_(output),
@@ -80,43 +81,78 @@ void Game::startAdventure() {
     while (adventuring && character_->hasLivingMonsters()) {
         output_ << "\nEventyr\n"
                 << "1. Kaemp mod et monster\n"
-                << "2. Tilbage til hovedmenu\n";
-        const int choice = input_.readIntInRange("Vaelg: ", 1, 2);
+                << "2. Kaemp mod en grotte\n"
+                << "3. Tilbage til hovedmenu\n";
+        const int choice = input_.readIntInRange("Vaelg: ", 1, 3);
 
-        if (choice == 2) {
-            adventuring = false;
-            continue;
-        }
-
-        const int enemyIndex = chooseEnemyIndex();
-        Monster enemy = catalog_.monsters().at(static_cast<std::size_t>(enemyIndex));
-
-        Battle battle(randomEngine_);
-        bool enemyDefeated = false;
-
-        while (!enemy.isDefeated() && character_->hasLivingMonsters()) {
-            const std::size_t playerMonsterIndex = chooseLivingMonsterIndex();
-            Monster& playerMonster = character_->monsters().at(playerMonsterIndex);
-            const BattleResult result = battle.fight(playerMonster, enemy, output_);
-
-            if (result.playerMonsterWon) {
-                enemyDefeated = true;
-            } else if (character_->hasLivingMonsters()) {
-                output_ << "Du har stadig monstre tilbage. Send et nyt ind.\n";
-            }
-        }
-
-        if (enemyDefeated) {
-            Monster captured = enemy;
-            captured.healToFull();
-            offerCapturedMonster(captured);
-        } else if (!character_->hasLivingMonsters()) {
-            output_ << "Alle dine monstre er besejret. Du vender tilbage til hovedmenuen.\n";
+        if (choice == 1) {
+            startSingleMonsterFight();
+        } else if (choice == 2) {
+            startCaveFight();
+        } else {
             adventuring = false;
         }
     }
 
     input_.waitForEnter();
+}
+
+bool Game::fightEnemy(Monster& enemy) {
+    Battle battle(randomEngine_);
+    bool enemyDefeated = false;
+
+    while (!enemy.isDefeated() && character_->hasLivingMonsters()) {
+        const std::size_t playerMonsterIndex = chooseLivingMonsterIndex();
+        Monster& playerMonster = character_->monsters().at(playerMonsterIndex);
+        const BattleResult result = battle.fight(playerMonster, enemy, input_, output_);
+
+        if (result.playerMonsterWon) {
+            enemyDefeated = true;
+        } else if (character_->hasLivingMonsters()) {
+            output_ << "Du har stadig monstre tilbage. Send et nyt ind.\n";
+        }
+    }
+
+    if (!enemyDefeated && !character_->hasLivingMonsters()) {
+        output_ << "Alle dine monstre er besejret. Du vender tilbage til hovedmenuen.\n";
+    }
+
+    return enemyDefeated;
+}
+
+void Game::startSingleMonsterFight() {
+    const int enemyIndex = chooseEnemyIndex();
+    Monster enemy = catalog_.monsters().at(static_cast<std::size_t>(enemyIndex));
+
+    if (fightEnemy(enemy)) {
+        Monster captured = enemy;
+        captured.healToFull();
+        offerCapturedMonster(captured);
+    }
+}
+
+void Game::startCaveFight() {
+    std::vector<Cave> caves;
+
+    for (int caveNumber = 1; caveNumber <= 3; ++caveNumber) {
+        caves.push_back(Cave::generateForCharacter(*character_, catalog_, caveNumber, randomEngine_));
+    }
+
+    Cave cave = caves.at(static_cast<std::size_t>(chooseCaveIndex(caves)));
+    output_ << "\nDu gaar ind i " << cave.name() << ". Alle monstre skal besejres.\n";
+
+    while (cave.hasLivingMonsters() && character_->hasLivingMonsters()) {
+        const std::size_t enemyIndex = cave.livingMonsterIndexes().front();
+        Monster& enemy = cave.monsters().at(enemyIndex);
+        output_ << "\nNaeste grottemonster: " << enemy.summary() << "\n";
+
+        if (!fightEnemy(enemy)) {
+            return;
+        }
+    }
+
+    output_ << cave.name() << " er gennemfoert.\n";
+    giveItemToMonster(randomRewardItem());
 }
 
 void Game::listCharacterMonsters() const {
@@ -134,6 +170,11 @@ void Game::listCharacterMonsters() const {
             output_ << " [besejret]";
         }
         output_ << "\n";
+
+        const auto& items = monsters[index].items();
+        for (std::size_t itemIndex = 0; itemIndex < items.size(); ++itemIndex) {
+            output_ << "   Ting " << itemIndex + 1 << ": " << items[itemIndex].summary() << "\n";
+        }
     }
 }
 
@@ -146,6 +187,20 @@ int Game::chooseEnemyIndex() {
     }
 
     return input_.readIntInRange("Fjende: ", 1, static_cast<int>(monsters.size())) - 1;
+}
+
+int Game::chooseCaveIndex(const std::vector<Cave>& caves) {
+    output_ << "\nVaelg grotte\n";
+
+    for (std::size_t index = 0; index < caves.size(); ++index) {
+        output_ << index + 1 << ". " << caves[index].summary() << "\n";
+        const auto& monsters = caves[index].monsters();
+        for (const Monster& monster : monsters) {
+            output_ << "   - " << monster.summary() << "\n";
+        }
+    }
+
+    return input_.readIntInRange("Grotte: ", 1, static_cast<int>(caves.size())) - 1;
 }
 
 std::size_t Game::chooseLivingMonsterIndex() {
@@ -189,4 +244,36 @@ void Game::offerCapturedMonster(const Monster& monster) {
 
     character_->replaceMonster(static_cast<std::size_t>(replaceChoice - 1), monster);
     output_ << monster.name() << " er tilfoejet.\n";
+}
+
+Item Game::randomRewardItem() {
+    const std::vector<Item> rewards{
+        Item::bomb(),
+        Item::fireBomb(),
+        Item::thunderBomb(),
+        Item::club(),
+        Item::blaster(),
+        Item::curse(),
+        Item::poison(),
+        Item::focusStone(),
+    };
+
+    std::uniform_int_distribution<std::size_t> roll(0, rewards.size() - 1);
+    return rewards[roll(randomEngine_)];
+}
+
+void Game::giveItemToMonster(const Item& item) {
+    output_ << "Du fandt " << item.summary() << ". Vaelg hvilket monster der skal have den.\n";
+
+    const auto& monsters = character_->monsters();
+    for (std::size_t index = 0; index < monsters.size(); ++index) {
+        output_ << index + 1 << ". " << monsters[index].summary() << "\n";
+    }
+
+    const int choice =
+        input_.readIntInRange("Monster: ", 1, static_cast<int>(monsters.size()));
+    character_->monsters().at(static_cast<std::size_t>(choice - 1)).addItem(item);
+
+    output_ << item.name() << " blev givet til "
+            << character_->monsters().at(static_cast<std::size_t>(choice - 1)).name() << ".\n";
 }
