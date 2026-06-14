@@ -7,6 +7,7 @@ add_executable(monster_adventure
     src/Battle.cpp
     src/Cave.cpp
     src/Character.cpp
+    src/Database.cpp
     src/Game.cpp
     src/Input.cpp
     src/Item.cpp
@@ -16,6 +17,8 @@ add_executable(monster_adventure
 )
 
 target_include_directories(monster_adventure PRIVATE include)
+
+target_link_libraries(monster_adventure PRIVATE sqlite3)
 
 target_compile_features(monster_adventure PRIVATE cxx_std_17)
 
