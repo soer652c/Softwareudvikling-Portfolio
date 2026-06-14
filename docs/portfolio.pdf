@@ -1,0 +1,600 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2689 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 45 797 Tm
+() Tj
+0 -14 Td
+(PORTFOLIO - MONSTER ADVENTURE) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(GENNEMGANG AF FOERSTE ITERATION) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Foerste iteration implementerer et simpelt terminalspil med en karakter, en liste af egne ) Tj
+0 -14 Td
+(monstre og kampe mod fjendtlige monstre. Spillet gemmer ikke data mellem koerelser, hvilket ) Tj
+0 -14 Td
+(passer til kravene for iterationen.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Udviklingsflowet er holdt objektorienteret: foerst er domaeneklasserne for monster og ) Tj
+0 -14 Td
+(karakter oprettet, derefter kataloget med tilgaengelige monstre, kampmotoren og til sidst ) Tj
+0 -14 Td
+(terminalmenuerne.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Nuvaerende status:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(* Spilleren kan oprette en ny karakter med et navn.) Tj
+0 -14 Td
+(* En ny karakter starter med to Hest.) Tj
+0 -14 Td
+(* Karakteren kan have op til fire monstre.) Tj
+0 -14 Td
+(* Spilleren kan starte et eventyr, vaelge en fjende og vaelge et levende monster til kampen.) Tj
+0 -14 Td
+(* Kampen vaelger tilfaeldigt hvem der angriber foerst, hvorefter angrebene skifter.) Tj
+0 -14 Td
+(* Hvis et eget monster besejres, og karakteren stadig har levende monstre, sendes et nyt ind) Tj
+0 -14 Td
+( mod samme fjende.) Tj
+0 -14 Td
+(* Hvis fjenden besejres, kan spilleren beholde den.) Tj
+0 -14 Td
+(* Hvis karakteren allerede har fire monstre, kan spilleren udskifte et eksisterende monster.) Tj
+0 -14 Td
+(* Hvis alle egne monstre besejres, vender spillet tilbage til hovedmenuen.) Tj
+0 -14 Td
+(* Spilleren kan lukke spillet fra hovedmenuen.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(BESKRIVELSE AF NUVAERENDE SYSTEM) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Systemet er et C++17 terminalprogram uden eksterne biblioteker. `Game` styrer hovedmenuen og) Tj
+0 -14 Td
+( eventyret. `Input` validerer brugerinput. `MonsterCatalog` indeholder de tilgaengelige ) Tj
+0 -14 Td
+(monstertyper. `Character` ejer spillerens monstre, mens `Battle` afvikler en kamp mellem to ) Tj
+0 -14 Td
+(`Monster`-objekter.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(USE CASE DIAGRAM) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(    flowchart LR) Tj
+0 -14 Td
+(        Player["Spiller"]) Tj
+0 -14 Td
+(        Create["Lav ny karakter"]) Tj
+0 -14 Td
+(        View["Vis karakter"]) Tj
+0 -14 Td
+(        Adventure["Start eventyr"]) Tj
+0 -14 Td
+(        ChooseEnemy["Vaelg fjende"]) Tj
+0 -14 Td
+(        ChooseMonster["Vaelg eget monster"]) Tj
+0 -14 Td
+(        Fight["Kaemp"]) Tj
+0 -14 Td
+(        Capture["Behold besejret monster"]) Tj
+0 -14 Td
+(        Replace["Udskift monster"]) Tj
+0 -14 Td
+(        Exit["Luk spillet"]) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(        Player --> Create) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Length 2114 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 45 797 Tm
+(        Player --> View) Tj
+0 -14 Td
+(        Player --> Adventure) Tj
+0 -14 Td
+(        Adventure --> ChooseEnemy) Tj
+0 -14 Td
+(        Adventure --> ChooseMonster) Tj
+0 -14 Td
+(        Adventure --> Fight) Tj
+0 -14 Td
+(        Fight --> Capture) Tj
+0 -14 Td
+(        Capture --> Replace) Tj
+0 -14 Td
+(        Player --> Exit) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Use cases:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(* Lav ny karakter: Spilleren indtaster et navn, og karakteren starter med to Hest.) Tj
+0 -14 Td
+(* Vis karakter: Spilleren ser karakterens monstre, hp og styrke.) Tj
+0 -14 Td
+(* Start eventyr: Spilleren kan vaelge at kaempe eller vende tilbage.) Tj
+0 -14 Td
+(* Vaelg fjende: Spilleren vaelger et monster fra monsterlisten.) Tj
+0 -14 Td
+(* Vaelg eget monster: Spilleren vaelger et levende monster fra karakterens liste.) Tj
+0 -14 Td
+(* Kaemp: Systemet afvikler kampen med tilfaeldig foerste angriber og skiftende ture.) Tj
+0 -14 Td
+(* Behold besejret monster: Spilleren kan tage en besejret fjende.) Tj
+0 -14 Td
+(* Udskift monster: Hvis karakteren har fire monstre, kan spilleren erstatte et monster.) Tj
+0 -14 Td
+(* Luk spillet: Programmet afsluttes.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(DOMAIN MODEL) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(    classDiagram) Tj
+0 -14 Td
+(        class Character {) Tj
+0 -14 Td
+(            name) Tj
+0 -14 Td
+(            monsters) Tj
+0 -14 Td
+(        }) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(        class Monster {) Tj
+0 -14 Td
+(            name) Tj
+0 -14 Td
+(            hitPoints) Tj
+0 -14 Td
+(            maxHitPoints) Tj
+0 -14 Td
+(            strength) Tj
+0 -14 Td
+(        }) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(        class MonsterCatalog {) Tj
+0 -14 Td
+(            monsters) Tj
+0 -14 Td
+(        }) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(        class Battle {) Tj
+0 -14 Td
+(            randomEngine) Tj
+0 -14 Td
+(        }) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(        Character "1" o-- "0..4" Monster) Tj
+0 -14 Td
+(        MonsterCatalog "1" o-- "*" Monster) Tj
+0 -14 Td
+(        Battle ..> Monster) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+ET
+endstream
+endobj
+4 0 obj
+<< /Length 1969 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 45 797 Tm
+(SEKVENSDIAGRAMMER) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Lav ny karakter) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(    sequenceDiagram) Tj
+0 -14 Td
+(        actor Spiller) Tj
+0 -14 Td
+(        participant Game) Tj
+0 -14 Td
+(        participant Input) Tj
+0 -14 Td
+(        participant Character) Tj
+0 -14 Td
+(        participant MonsterCatalog) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(        Spiller->>Game: Vaelger "Lav ny karakter") Tj
+0 -14 Td
+(        Game->>Input: Laes navn) Tj
+0 -14 Td
+(        Input-->>Game: Navn) Tj
+0 -14 Td
+(        Game->>Character: Opret karakter) Tj
+0 -14 Td
+(        Game->>MonsterCatalog: Hent starter Hest) Tj
+0 -14 Td
+(        Game->>Character: Tilfoej Hest) Tj
+0 -14 Td
+(        Game->>Character: Tilfoej Hest) Tj
+0 -14 Td
+(        Game-->>Spiller: Karakter oprettet) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Kamp) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(    sequenceDiagram) Tj
+0 -14 Td
+(        actor Spiller) Tj
+0 -14 Td
+(        participant Game) Tj
+0 -14 Td
+(        participant MonsterCatalog) Tj
+0 -14 Td
+(        participant Character) Tj
+0 -14 Td
+(        participant Battle) Tj
+0 -14 Td
+(        participant Monster) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(        Spiller->>Game: Vaelger kamp) Tj
+0 -14 Td
+(        Game->>MonsterCatalog: Vis fjender) Tj
+0 -14 Td
+(        Spiller->>Game: Vaelger fjende) Tj
+0 -14 Td
+(        Game->>Character: Vis levende monstre) Tj
+0 -14 Td
+(        Spiller->>Game: Vaelger eget monster) Tj
+0 -14 Td
+(        Game->>Battle: fight\(egetMonster, fjende\)) Tj
+0 -14 Td
+(        Battle->>Monster: takeDamage\(\)) Tj
+0 -14 Td
+(        Battle->>Monster: takeDamage\(\)) Tj
+0 -14 Td
+(        Battle-->>Game: BattleResult) Tj
+0 -14 Td
+(        Game-->>Spiller: Resultat) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Behold besejret monster) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(    sequenceDiagram) Tj
+0 -14 Td
+(        actor Spiller) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Length 2127 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 45 797 Tm
+(        participant Game) Tj
+0 -14 Td
+(        participant Character) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(        Game-->>Spiller: Tilbyder besejret monster) Tj
+0 -14 Td
+(        Spiller->>Game: Svarer ja) Tj
+0 -14 Td
+(        alt Under fire monstre) Tj
+0 -14 Td
+(            Game->>Character: addMonster\(monster\)) Tj
+0 -14 Td
+(        else Fire monstre) Tj
+0 -14 Td
+(            Game-->>Spiller: Vaelg om der skal udskiftes) Tj
+0 -14 Td
+(            Spiller->>Game: Vaelger monster) Tj
+0 -14 Td
+(            Game->>Character: replaceMonster\(index, monster\)) Tj
+0 -14 Td
+(        end) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(UML - CLASS DIAGRAM) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(    classDiagram) Tj
+0 -14 Td
+(        class Game {) Tj
+0 -14 Td
+(            +run\(\)) Tj
+0 -14 Td
+(            -showMainMenu\(\)) Tj
+0 -14 Td
+(            -createNewCharacter\(\)) Tj
+0 -14 Td
+(            -startAdventure\(\)) Tj
+0 -14 Td
+(            -offerCapturedMonster\(monster\)) Tj
+0 -14 Td
+(        }) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(        class Input {) Tj
+0 -14 Td
+(            +readIntInRange\(prompt, min, max\)) Tj
+0 -14 Td
+(            +readNonEmptyLine\(prompt\)) Tj
+0 -14 Td
+(            +readYesNo\(prompt\)) Tj
+0 -14 Td
+(            +waitForEnter\(\)) Tj
+0 -14 Td
+(        }) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(        class Character {) Tj
+0 -14 Td
+(            +maxMonsterCount) Tj
+0 -14 Td
+(            +name\(\)) Tj
+0 -14 Td
+(            +monsters\(\)) Tj
+0 -14 Td
+(            +addMonster\(monster\)) Tj
+0 -14 Td
+(            +replaceMonster\(index, monster\)) Tj
+0 -14 Td
+(            +hasLivingMonsters\(\)) Tj
+0 -14 Td
+(            +livingMonsterIndexes\(\)) Tj
+0 -14 Td
+(        }) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(        class Monster {) Tj
+0 -14 Td
+(            +name\(\)) Tj
+0 -14 Td
+(            +hitPoints\(\)) Tj
+0 -14 Td
+(            +maxHitPoints\(\)) Tj
+0 -14 Td
+(            +strength\(\)) Tj
+0 -14 Td
+(            +isDefeated\(\)) Tj
+0 -14 Td
+(            +takeDamage\(damage\)) Tj
+0 -14 Td
+(            +healToFull\(\)) Tj
+0 -14 Td
+(            +summary\(\)) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Length 1722 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 45 797 Tm
+(        }) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(        class MonsterCatalog {) Tj
+0 -14 Td
+(            +monsters\(\)) Tj
+0 -14 Td
+(            +starterHorse\(\)) Tj
+0 -14 Td
+(        }) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(        class Battle {) Tj
+0 -14 Td
+(            +fight\(playerMonster, enemyMonster, output\)) Tj
+0 -14 Td
+(        }) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(        Game o-- Input) Tj
+0 -14 Td
+(        Game o-- MonsterCatalog) Tj
+0 -14 Td
+(        Game o-- Character) Tj
+0 -14 Td
+(        Game ..> Battle) Tj
+0 -14 Td
+(        Character o-- Monster) Tj
+0 -14 Td
+(        MonsterCatalog o-- Monster) Tj
+0 -14 Td
+(        Battle ..> Monster) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(GIT-LOG) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Git-log kan indsattes i PDF'en med:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(    git log --oneline --decorate) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(GIT BRANCHING STRATEGY) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(I denne foerste iteration bruges `master` som stabil hovedgren, fordi projektet er lille og ) Tj
+0 -14 Td
+(arbejdet kun omfatter en enkelt samlet prototype. Ved senere iterationer bruges korte ) Tj
+0 -14 Td
+(feature branches med navne som `feature/save-game` eller `feature/tests`, som merges tilbage) Tj
+0 -14 Td
+( i `master`, naar de bygger og opfylder kravene.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(BACKLOG) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(* Gem og indlaes karakterer mellem spilkoersler.) Tj
+0 -14 Td
+(* Flere eventyrtyper og svaerhedsgrader.) Tj
+0 -14 Td
+(* Bedre balance for hp og styrke.) Tj
+0 -14 Td
+(* Mulighed for at helbrede monstre via en menu.) Tj
+0 -14 Td
+(* Automatiske tests af domaeneklasser og kampregler.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+8 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 3 0 R >>
+endobj
+9 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+10 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 5 0 R >>
+endobj
+11 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+12 0 obj
+<< /Type /Pages /Kids [7 0 R 8 0 R 9 0 R 10 0 R 11 0 R] /Count 5 >>
+endobj
+13 0 obj
+<< /Type /Catalog /Pages 12 0 R >>
+endobj
+xref
+0 14
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002819 00000 n 
+0000004984 00000 n 
+0000007004 00000 n 
+0000009182 00000 n 
+0000010955 00000 n 
+0000011082 00000 n 
+0000011209 00000 n 
+0000011336 00000 n 
+0000011464 00000 n 
+0000011592 00000 n 
+0000011676 00000 n 
+trailer
+<< /Size 14 /Root 13 0 R >>
+startxref
+11727
+%%EOF
