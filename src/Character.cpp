@@ -17,6 +17,14 @@ std::vector<Monster>& Character::monsters() {
     return monsters_;
 }
 
+const GameStats& Character::stats() const {
+    return stats_;
+}
+
+GameStats& Character::stats() {
+    return stats_;
+}
+
 bool Character::addMonster(const Monster& monster) {
     if (monsters_.size() >= maxMonsterCount) {
         return false;

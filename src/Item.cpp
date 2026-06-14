@@ -108,3 +108,29 @@ Item Item::curse() {
 Item Item::poison() {
     return Item("Gift", 0, 20, StatusType::Poisoned, 3, ItemTarget::Opponent);
 }
+
+std::optional<Item> Item::fromName(const std::string& name) {
+    if (name == "Bombe") {
+        return Item::bomb();
+    }
+    if (name == "Ildbombe") {
+        return Item::fireBomb();
+    }
+    if (name == "Tordenbombe") {
+        return Item::thunderBomb();
+    }
+    if (name == "Koelle") {
+        return Item::club();
+    }
+    if (name == "Blaeser") {
+        return Item::blaster();
+    }
+    if (name == "Forbandelse") {
+        return Item::curse();
+    }
+    if (name == "Gift") {
+        return Item::poison();
+    }
+
+    return std::nullopt;
+}

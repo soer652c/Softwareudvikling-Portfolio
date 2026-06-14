@@ -4,12 +4,17 @@
 #include "Monster.h"
 
 #include <iosfwd>
+#include <optional>
 #include <random>
+#include <string>
+#include <vector>
 
 class Input;
 
 struct BattleResult {
     bool playerMonsterWon;
+    std::vector<std::string> usedItemNames;
+    std::optional<std::string> defeatingItemName;
 };
 
 class Battle {
@@ -20,7 +25,8 @@ public:
         Monster& playerMonster, Monster& enemyMonster, Input& input, std::ostream& output);
 
 private:
-    void takePlayerTurn(Monster& playerMonster, Monster& enemyMonster, Input& input, std::ostream& output);
+    std::optional<std::string> takePlayerTurn(
+        Monster& playerMonster, Monster& enemyMonster, Input& input, std::ostream& output);
     void takeEnemyTurn(Monster& enemyMonster, Monster& playerMonster, std::ostream& output);
     void basicAttack(Monster& attacker, Monster& defender, std::ostream& output);
 

@@ -4,6 +4,7 @@
 #include "StatusEffect.h"
 
 #include <iosfwd>
+#include <optional>
 #include <random>
 #include <string>
 
@@ -37,6 +38,7 @@ public:
     static Item blaster();
     static Item curse();
     static Item poison();
+    static std::optional<Item> fromName(const std::string& name);
 
 private:
     std::string name_;

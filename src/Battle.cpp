@@ -10,6 +10,8 @@ BattleResult Battle::fight(
     Monster& playerMonster, Monster& enemyMonster, Input& input, std::ostream& output) {
     std::bernoulli_distribution startsFirst(0.5);
     bool playerTurn = startsFirst(randomEngine_);
+    std::vector<std::string> usedItemNames;
+    std::optional<std::string> defeatingItemName;
 
     output << "\nKamp starter: " << playerMonster.summary() << " mod "
            << enemyMonster.summary() << "\n";
@@ -26,7 +28,14 @@ BattleResult Battle::fight(
 
         if (canAct) {
             if (playerTurn) {
-                takePlayerTurn(playerMonster, enemyMonster, input, output);
+                const std::optional<std::string> usedItem =
+                    takePlayerTurn(playerMonster, enemyMonster, input, output);
+                if (usedItem) {
+                    usedItemNames.push_back(*usedItem);
+                    if (enemyMonster.isDefeated()) {
+                        defeatingItemName = usedItem;
+                    }
+                }
             } else {
                 takeEnemyTurn(enemyMonster, playerMonster, output);
             }
@@ -42,10 +51,10 @@ BattleResult Battle::fight(
     playerMonster.clearStatuses();
     enemyMonster.clearStatuses();
 
-    return BattleResult{playerWon};
+    return BattleResult{playerWon, usedItemNames, defeatingItemName};
 }
 
-void Battle::takePlayerTurn(
+std::optional<std::string> Battle::takePlayerTurn(
     Monster& playerMonster, Monster& enemyMonster, Input& input, std::ostream& output) {
     output << "\nTur for " << playerMonster.name() << "\n"
            << "1. Angrib\n";
@@ -60,7 +69,7 @@ void Battle::takePlayerTurn(
 
     if (choice == 1) {
         basicAttack(playerMonster, enemyMonster, output);
-        return;
+        return std::nullopt;
     }
 
     const Item& item = items[static_cast<std::size_t>(choice - 2)];
@@ -68,6 +77,7 @@ void Battle::takePlayerTurn(
     if (item.dealsDamage()) {
         playerMonster.applyAfterDealingDamage(output);
     }
+    return item.name();
 }
 
 void Battle::takeEnemyTurn(
