@@ -155,8 +155,8 @@ def write_pdf(pages: list[list[str]], output_path: Path) -> None:
 
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
-    markdown_path = root / "docs" / "portfolio.md"
-    output_path = root / "docs" / "portfolio.pdf"
+    markdown_path = root / "documentation" / "portfolio.md"
+    output_path = root / "documentation" / "portfolio.pdf"
 
     lines = markdown_to_lines(markdown_path.read_text(encoding="utf-8"))
     write_pdf(paginate(lines), output_path)
